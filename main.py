@@ -1,14 +1,41 @@
 import eel
 import json
 import os
+import threading
+import atexit
+import time
+import ctypes
 from smartcard.System import readers
 from smartcard.util import toHexString, toBytes
 from smartcard.Exceptions import NoCardException, CardConnectionException
 from smartcard.CardConnection import CardConnection
 
+# Импортируем RFID читатель
+from rfid_reader import rfid_reader
+
 # Инициализация Eel
 eel.init('web')
 
+# Запуск мониторинга RFID
+def start_rfid_monitoring():
+    """Запуск RFID мониторинга"""
+    monitor_thread = threading.Thread(target=rfid_reader.start_monitoring, daemon=True)
+    monitor_thread.start()
+
+# Инициализация при запуске
+start_rfid_monitoring()
+
+def cleanup():
+    """Очистка при выходе"""
+    try:
+        rfid_reader.stop_monitoring()
+    except:
+        pass
+
+# Регистрация очистки
+atexit.register(cleanup)
+
+# Остальной код main.py...
 # Загрузка конфигурации
 config_file = "mifare_config.json"
 
